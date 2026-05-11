@@ -1,268 +1,194 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/services/product_service.dart';
+import '../../../core/services/cart_service.dart';
+import '../../../core/services/chat_service.dart';
+import '../../../shared/models/product_model.dart';
+import '../widgets/product_popup_card.dart';
 
-class HomeFeedScreen extends StatelessWidget {
+class HomeFeedScreen extends StatefulWidget {
   const HomeFeedScreen({super.key});
+
+  @override
+  State<HomeFeedScreen> createState() => _HomeFeedScreenState();
+}
+
+class _HomeFeedScreenState extends State<HomeFeedScreen> {
+  final ProductService _productService = ProductService();
+  final CartService _cartService = CartService();
+  final ChatService _chatService = ChatService();
+
+  void _showProductPopup(Product product) {
+    showDialog(
+      context: context,
+      builder: (context) => ProductPopupCard(
+        product: product,
+        onAddToCart: () async {
+          await _cartService.addToCart(product);
+          if (mounted) {
+            Navigator.pop(context);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Added to cart!')),
+            );
+          }
+        },
+        onChat: () async {
+          final roomId = await _chatService.getOrCreateChatRoom(product.sellerId);
+          if (mounted) {
+            Navigator.pop(context);
+            context.push('/chat-detail/$roomId/${product.sellerId}');
+          }
+        },
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  RichText(
-                    text: TextSpan(
-                      text: 'Bazar',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            color: Colors.black87,
-                            letterSpacing: -1,
-                          ),
-                      children: [
-                        TextSpan(
-                          text: 'io',
-                          style: TextStyle(
-                            color: Theme.of(context).primaryColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  CircleAvatar(
-                    radius: 18,
-                    backgroundColor: Colors.grey.shade200,
-                    child: Icon(CupertinoIcons.person_solid, color: Colors.grey.shade600, size: 20),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              // Search Bar
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Search...',
-                    hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
-                    prefixIcon: Icon(CupertinoIcons.search, color: Colors.grey.shade500, size: 20),
-                    suffixIcon: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(CupertinoIcons.slider_horizontal_3, color: Colors.grey.shade500, size: 20),
-                        const SizedBox(width: 12),
-                        Icon(CupertinoIcons.heart, color: Colors.grey.shade500, size: 20),
-                        const SizedBox(width: 16),
-                      ],
-                    ),
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Live Sale Banner
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF4A90E2), Color(0xFFD64AE2)],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withAlpha(50),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Text(
-                              'LIVE',
-                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'SALE!',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 32,
-                              fontWeight: FontWeight.w900,
-                              height: 1.0,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Up to 50% Off Electronics',
-                            style: TextStyle(
-                              color: Colors.white.withAlpha(200),
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Placeholder for Headphone Image
-                    Icon(CupertinoIcons.headphones, color: Colors.white.withAlpha(200), size: 60),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Popular Section
-              const Text(
-                'Popular Zones',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-
-              // Categories placeholder (Grey rounded bar in figma)
-              Container(
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade200,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Products Grid
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 0.75,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                ),
-                itemCount: 4,
-                itemBuilder: (context, index) {
-                  return GestureDetector(
-                    onTap: () {
-                      context.push('/product-details');
-                    },
-                    child: const ProductCard(),
-                  );
-                },
-              ),
-            ],
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        elevation: 0,
+        title: const Text(
+          'BAZARIO',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.black,
+            letterSpacing: 4,
+            fontSize: 22,
           ),
         ),
+        centerTitle: true,
+      ),
+      body: StreamBuilder<List<Product>>(
+        stream: _productService.getProducts(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator(color: Colors.white));
+          }
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(
+              child: Text(
+                'No products in feed yet.\nUpload something to see it here!',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white70),
+              ),
+            );
+          }
+
+          final products = snapshot.data!;
+
+          return GridView.builder(
+            padding: const EdgeInsets.all(1),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 0.65,
+              crossAxisSpacing: 1,
+              mainAxisSpacing: 1,
+            ),
+            itemCount: products.length,
+            itemBuilder: (context, index) {
+              final product = products[index];
+              return FeedItem(
+                product: product,
+                onTap: () => _showProductPopup(product),
+              );
+            },
+          );
+        },
       ),
     );
   }
 }
 
-class ProductCard extends StatelessWidget {
-  const ProductCard({super.key});
+class FeedItem extends StatelessWidget {
+  final Product product;
+  final VoidCallback onTap;
+
+  const FeedItem({super.key, required this.product, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Image Placeholder
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.grey.shade800, // Representing the dark wooden cabinet
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-              ),
-              child: Stack(
-                children: [
-                  // Mock details for cabinet
-                  Positioned(
-                    top: 20,
-                    left: 20,
-                    right: 20,
-                    bottom: 20,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.white.withAlpha(50)),
-                      ),
-                    ),
-                  ),
-                  const Positioned(
-                    top: 10,
-                    right: 10,
-                    child: Icon(CupertinoIcons.heart, color: Colors.white, size: 18),
-                  )
-                ],
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return GestureDetector(
+      onTap: onTap,
+      onLongPress: () {
+        // Show price and name on long press as requested
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'WOODEN CABINETS',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Text(
+                    product.name,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '₹7,000',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).primaryColor,
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.green.withAlpha(20),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: const Text(
-                        'NEW',
-                        style: TextStyle(color: Colors.green, fontSize: 8, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
+                Text(
+                  '₹${product.price}',
+                  style: const TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
+            duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.black87,
+            margin: const EdgeInsets.all(20),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
+        );
+      },
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Media (Image or Video Thumbnail)
+          Image.network(
+            product.mediaUrl,
+            fit: BoxFit.cover,
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) return child;
+              return Container(
+                color: Colors.grey.shade900,
+                child: const Center(child: CupertinoActivityIndicator(color: Colors.white)),
+              );
+            },
+            errorBuilder: (context, error, stackTrace) => Container(
+              color: Colors.grey.shade900,
+              child: const Icon(Icons.broken_image, color: Colors.white24, size: 40),
+            ),
+          ),
+          
+          // Gradient Overlay at bottom for better visibility (optional but looks good)
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withOpacity(0.1),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Video Icon overlay if it's a video
+          if (product.isVideo)
+            const Positioned(
+              top: 12,
+              right: 12,
+              child: Icon(
+                CupertinoIcons.play_circle_fill,
+                color: Colors.white70,
+                size: 24,
+              ),
+            ),
         ],
       ),
     );

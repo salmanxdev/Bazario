@@ -8,13 +8,13 @@ import '../../features/auth/presentation/screens/register_screen/register_screen
 import '../../features/auth/presentation/screens/role_selection_screen/role_selection_screen.dart';
 import 'main_navigation_screen.dart';
 import '../../features/shop/presentation/screens/product_details_screen.dart';
+import '../../features/chat/presentation/screens/chat_detail_screen.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
-    initialLocation: '/splash', // ✅ FIXED ENTRY POINT
+    initialLocation: '/splash',
 
     routes: <RouteBase>[
-
       // SPLASH
       GoRoute(
         path: '/splash',
@@ -66,6 +66,17 @@ class AppRouter {
         name: 'productDetails',
         builder: (BuildContext context, GoRouterState state) {
           return const ProductDetailsScreen();
+        },
+      ),
+
+      // CHAT DETAIL
+      GoRoute(
+        path: '/chat-detail/:roomId/:otherUserId',
+        name: 'chatDetail',
+        builder: (BuildContext context, GoRouterState state) {
+          final roomId = state.pathParameters['roomId']!;
+          final otherUserId = state.pathParameters['otherUserId']!;
+          return ChatDetailScreen(roomId: roomId, otherUserId: otherUserId);
         },
       ),
     ],
