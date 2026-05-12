@@ -49,6 +49,16 @@ class CurrentUserNotifier extends AsyncNotifier<AppUser?> {
     await ref.read(authRepositoryProvider).logout();
     state = const AsyncData(null);
   }
+
+  Future<void> updateProfileImage(String imageUrl) async {
+    await ref.read(authRepositoryProvider).updateProfileImage(imageUrl);
+    await refreshUser();
+  }
+
+  Future<void> refreshUser() async {
+    final user = await ref.read(authRepositoryProvider).getCurrentUser();
+    state = AsyncData(user);
+  }
 }
 
 final currentUserProvider = AsyncNotifierProvider<CurrentUserNotifier, AppUser?>(() {

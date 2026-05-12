@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../../core/services/chat_service.dart';
-import '../../../shared/models/chat_model.dart';
+import 'package:bazario/core/services/chat_service.dart';
+import 'package:bazario/shared/models/chat_model.dart';
 
 class ChatDetailScreen extends StatefulWidget {
   final String roomId;
@@ -33,7 +33,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Chat with Seller'),
+        title: const Text('Chat with Seller'),
       ),
       body: Column(
         children: [

@@ -60,4 +60,11 @@ class ChatService {
       'lastMessageTime': FieldValue.serverTimestamp(),
     });
   }
+
+  Stream<QuerySnapshot> getChatRooms() {
+    return _firestore
+        .collection('chat_rooms')
+        .where('participants', arrayContains: _currentUserId)
+        .snapshots();
+  }
 }

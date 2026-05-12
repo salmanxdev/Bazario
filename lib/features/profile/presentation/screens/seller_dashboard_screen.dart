@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import '../../../../features/shop/presentation/screens/add_post_live_screen.dart';
+import '../../../../features/shop/presentation/screens/add_edit_shop_screen.dart';
+import '../../../../features/live/presentation/screens/live_screen.dart';
+import '../../../../features/shop/presentation/screens/orders_cart_screen.dart';
 
 class SellerDashboardScreen extends StatelessWidget {
   const SellerDashboardScreen({super.key});
@@ -86,24 +90,49 @@ class SellerDashboardScreen extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            Row(
+            GridView.count(
+              crossAxisCount: 2,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              mainAxisSpacing: 16,
+              crossAxisSpacing: 16,
+              childAspectRatio: 1.2,
               children: [
-                Expanded(
-                  child: _buildActionCard(
-                    context,
-                    title: 'Add Product',
-                    icon: CupertinoIcons.add_circled_solid,
-                    color: Colors.blue,
-                  ),
+                _buildActionCard(
+                  context,
+                  title: 'Add Product',
+                  icon: CupertinoIcons.add_circled_solid,
+                  color: Colors.blue,
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const AddPostLiveScreen()));
+                  },
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildActionCard(
-                    context,
-                    title: 'Go Live',
-                    icon: CupertinoIcons.video_camera_solid,
-                    color: Colors.red,
-                  ),
+                _buildActionCard(
+                  context,
+                  title: 'Add/Edit Shop',
+                  icon: CupertinoIcons.building_2_fill,
+                  color: Colors.purple,
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const AddEditShopScreen()));
+                  },
+                ),
+                _buildActionCard(
+                  context,
+                  title: 'Go Live',
+                  icon: CupertinoIcons.video_camera_solid,
+                  color: Colors.red,
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const LiveScreen()));
+                  },
+                ),
+                _buildActionCard(
+                  context,
+                  title: 'Orders',
+                  icon: CupertinoIcons.cube_box_fill,
+                  color: Colors.green,
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const OrdersCartScreen()));
+                  },
                 ),
               ],
             ),
@@ -142,27 +171,31 @@ class SellerDashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildActionCard(BuildContext context, {required String title, required IconData icon, required Color color}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(5),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 32),
-          const SizedBox(height: 12),
-          Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        ],
+  Widget _buildActionCard(BuildContext context, {required String title, required IconData icon, required Color color, VoidCallback? onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade200),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(5),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color, size: 32),
+            const SizedBox(height: 12),
+            Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+          ],
+        ),
       ),
     );
   }

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/services/product_service.dart';
-import '../../../core/services/cart_service.dart';
-import '../../../core/services/chat_service.dart';
-import '../../../shared/models/product_model.dart';
-import '../widgets/product_popup_card.dart';
+import 'package:bazario/core/services/product_service.dart';
+import 'package:bazario/core/services/cart_service.dart';
+import 'package:bazario/core/services/chat_service.dart';
+import 'package:bazario/shared/models/product_model.dart';
+import 'package:bazario/features/feed/presentation/widgets/product_popup_card.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
 class HomeFeedScreen extends StatefulWidget {
   const HomeFeedScreen({super.key});
@@ -35,6 +36,7 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
         },
         onChat: () async {
           final roomId = await _chatService.getOrCreateChatRoom(product.sellerId);
+          await _chatService.sendMessage(roomId, 'Hi! I am interested in your product: ${product.name}\n${product.mediaUrl}');
           if (mounted) {
             Navigator.pop(context);
             context.push('/chat-detail/$roomId/${product.sellerId}');
@@ -51,16 +53,19 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
       appBar: AppBar(
         backgroundColor: Colors.black,
         elevation: 0,
-        title: const Text(
-          'BAZARIO',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.black,
-            letterSpacing: 4,
-            fontSize: 22,
-          ),
+        title: Image.asset(
+          'assets/images/logo.png',
+          height: 28,
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(CupertinoIcons.person_crop_circle, color: Colors.white),
+            onPressed: () {
+              context.push('/profile');
+            },
+          ),
+        ],
       ),
       body: StreamBuilder<List<Product>>(
         stream: _productService.getProducts(),
@@ -80,14 +85,13 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
 
           final products = snapshot.data!;
 
-          return GridView.builder(
-            padding: const EdgeInsets.all(1),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          return MasonryGridView.builder(
+            padding: const EdgeInsets.all(4),
+            gridDelegate: const SliverSimpleGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              childAspectRatio: 0.65,
-              crossAxisSpacing: 1,
-              mainAxisSpacing: 1,
             ),
+            mainAxisSpacing: 4,
+            crossAxisSpacing: 4,
             itemCount: products.length,
             itemBuilder: (context, index) {
               final product = products[index];
@@ -114,7 +118,6 @@ class FeedItem extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       onLongPress: () {
-        // Show price and name on long press as requested
         ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -145,7 +148,6 @@ class FeedItem extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // Media (Image or Video Thumbnail)
           Image.network(
             product.mediaUrl,
             fit: BoxFit.cover,
@@ -161,8 +163,6 @@ class FeedItem extends StatelessWidget {
               child: const Icon(Icons.broken_image, color: Colors.white24, size: 40),
             ),
           ),
-          
-          // Gradient Overlay at bottom for better visibility (optional but looks good)
           Positioned.fill(
             child: DecoratedBox(
               decoration: BoxDecoration(
@@ -177,8 +177,6 @@ class FeedItem extends StatelessWidget {
               ),
             ),
           ),
-
-          // Video Icon overlay if it's a video
           if (product.isVideo)
             const Positioned(
               top: 12,

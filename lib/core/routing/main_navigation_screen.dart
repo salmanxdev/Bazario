@@ -27,7 +27,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
     final user = userState.value;
     final isSeller = user?.role == 'seller';
 
-    // Restoring Live, Shop, Chat and adding new features.
+    // Removed ProfileScreen from Bottom Nav as requested -> Restored!
     final buyerScreens = [
       const HomeFeedScreen(),      // Home
       const ShopExploreScreen(),   // Shop
@@ -62,7 +62,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
       const BottomNavigationBarItem(icon: Icon(CupertinoIcons.search), label: 'Feed'),
       const BottomNavigationBarItem(icon: Icon(CupertinoIcons.cart_fill), label: 'Orders'),
       const BottomNavigationBarItem(icon: Icon(CupertinoIcons.chat_bubble_2_fill), label: 'Chat'),
-      const BottomNavigationBarItem(icon: Icon(CupertinoIcons.person_crop_circle_fill), label: 'Profile'),
+      const BottomNavigationBarItem(icon: Icon(CupertinoIcons.person_solid), label: 'Profile'),
     ];
 
     final sellerNavItems = [
@@ -73,7 +73,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
       const BottomNavigationBarItem(icon: Icon(CupertinoIcons.add_circled_solid), label: 'Create'),
       const BottomNavigationBarItem(icon: Icon(CupertinoIcons.cart_fill), label: 'Orders'),
       const BottomNavigationBarItem(icon: Icon(CupertinoIcons.chat_bubble_2_fill), label: 'Chat'),
-      const BottomNavigationBarItem(icon: Icon(CupertinoIcons.person_crop_circle_fill), label: 'Profile'),
+      const BottomNavigationBarItem(icon: Icon(CupertinoIcons.person_solid), label: 'Profile'),
     ];
 
     final navItems = isSeller ? sellerNavItems : buyerNavItems;
@@ -114,4 +114,3 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
     );
   }
 }
-

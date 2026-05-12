@@ -9,6 +9,7 @@ import '../../features/auth/presentation/screens/role_selection_screen/role_sele
 import 'main_navigation_screen.dart';
 import '../../features/shop/presentation/screens/product_details_screen.dart';
 import '../../features/chat/presentation/screens/chat_detail_screen.dart';
+import '../../features/profile/presentation/screens/profile_screen.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -77,6 +78,15 @@ class AppRouter {
           final roomId = state.pathParameters['roomId']!;
           final otherUserId = state.pathParameters['otherUserId']!;
           return ChatDetailScreen(roomId: roomId, otherUserId: otherUserId);
+        },
+      ),
+
+      // PROFILE
+      GoRoute(
+        path: '/profile',
+        name: 'profile',
+        builder: (BuildContext context, GoRouterState state) {
+          return const ProfileScreen();
         },
       ),
     ],

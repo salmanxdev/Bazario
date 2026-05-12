@@ -4,6 +4,8 @@ class AppUser {
   final String firstName;
   final String lastName;
   final String role; // 'buyer' or 'seller'
+  final String? profileImageUrl;
+  final double walletBalance;
 
   AppUser({
     required this.id,
@@ -11,6 +13,8 @@ class AppUser {
     required this.firstName,
     required this.lastName,
     required this.role,
+    this.profileImageUrl,
+    this.walletBalance = 0.0,
   });
 
   factory AppUser.fromMap(Map<String, dynamic> map, String id) {
@@ -20,6 +24,8 @@ class AppUser {
       firstName: map['firstName'] ?? '',
       lastName: map['lastName'] ?? '',
       role: map['role'] ?? 'buyer',
+      profileImageUrl: map['profileImageUrl'],
+      walletBalance: (map['walletBalance'] ?? 0.0).toDouble(),
     );
   }
 
@@ -29,6 +35,8 @@ class AppUser {
       'firstName': firstName,
       'lastName': lastName,
       'role': role,
+      if (profileImageUrl != null) 'profileImageUrl': profileImageUrl,
+      'walletBalance': walletBalance,
     };
   }
 }

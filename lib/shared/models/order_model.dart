@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'cart_item_model.dart';
+import 'package:bazario/shared/models/cart_item_model.dart';
 
 class OrderModel {
   final String id;
@@ -19,15 +19,17 @@ class OrderModel {
   });
 
   factory OrderModel.fromFirestore(DocumentSnapshot doc) {
-    Map data = doc.data() as Map<String, dynamic>;
+    final data = doc.data() as Map<String, dynamic>;
+    final itemsList = data['items'] as List<dynamic>? ?? [];
+    
     return OrderModel(
       id: doc.id,
       userId: data['userId'] ?? '',
-      items: (data['items'] as List? ?? [])
-          .map((item) => CartItem.fromMap(item))
+      items: itemsList
+          .map((item) => CartItem.fromMap(item as Map<String, dynamic>))
           .toList(),
       totalAmount: (data['totalAmount'] ?? 0).toDouble(),
-      createdAt: (data['createdAt'] as Timestamp).toDate(),
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       status: data['status'] ?? 'pending',
     );
   }
@@ -40,18 +42,5 @@ class OrderModel {
       'createdAt': FieldValue.serverTimestamp(),
       'status': status,
     };
-  }
-}
-
-extension CartItemExtension on CartItem {
-  static CartItem fromMap(Map<String, dynamic> data) {
-    return CartItem(
-      id: '', // Not needed in order history usually
-      productId: data['productId'] ?? '',
-      productName: data['productName'] ?? '',
-      price: (data['price'] ?? 0).toDouble(),
-      mediaUrl: data['mediaUrl'] ?? '',
-      quantity: data['quantity'] ?? 1,
-    );
   }
 }

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:uuid/uuid.dart';
-import '../../../core/services/product_service.dart';
-import '../../../shared/models/product_model.dart';
+import 'package:bazario/core/services/product_service.dart';
+import 'package:bazario/shared/models/product_model.dart';
 
 class AddPostLiveScreen extends StatefulWidget {
   const AddPostLiveScreen({super.key});
@@ -94,8 +94,10 @@ class _AddPostLiveScreenState extends State<AddPostLiveScreen> {
                     ),
                     TextFormField(
                       controller: _mediaUrlController,
-                      decoration: const InputDecoration(labelText: 'Media URL (Image/Video)'),
-                      hintText: 'Leave empty for random placeholder',
+                      decoration: const InputDecoration(
+                        labelText: 'Media URL (Image/Video)',
+                        hintText: 'Leave empty for random placeholder',
+                      ),
                     ),
                     SwitchListTile(
                       title: const Text('Is this a video?'),

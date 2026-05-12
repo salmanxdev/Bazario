@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
-import '../../../core/services/cart_service.dart';
-import '../../../core/services/order_service.dart';
-import '../../../shared/models/cart_item_model.dart';
-import '../../../shared/models/order_model.dart';
+import 'package:bazario/core/services/cart_service.dart';
+import 'package:bazario/core/services/order_service.dart';
+import 'package:bazario/shared/models/cart_item_model.dart';
+import 'package:bazario/shared/models/order_model.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 
 class OrdersCartScreen extends StatefulWidget {
   const OrdersCartScreen({super.key});
@@ -12,9 +12,54 @@ class OrdersCartScreen extends StatefulWidget {
   State<OrdersCartScreen> createState() => _OrdersCartScreenState();
 }
 
-class _OrdersCartScreenState extends State<OrdersCartScreen> {
   final CartService _cartService = CartService();
   final OrderService _orderService = OrderService();
+  late Razorpay _razorpay;
+  List<CartItem>? _currentCartItems;
+  double? _currentTotal;
+
+  @override
+  void initState() {
+    super.initState();
+    _razorpay = Razorpay();
+    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
+    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
+    _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
+  }
+
+  @override
+  void dispose() {
+    _razorpay.clear();
+    super.dispose();
+  }
+
+  void _handlePaymentSuccess(PaymentSuccessResponse response) async {
+    if (_currentCartItems != null && _currentTotal != null) {
+      await _orderService.placeOrder(_currentCartItems!, _currentTotal!);
+      await _cartService.clearCart();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Order placed successfully!')),
+        );
+      }
+    }
+  }
+
+  void _handlePaymentError(PaymentFailureResponse response) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Payment Failed: ${response.message}')),
+      );
+    }
+  }
+
+  void _handleExternalWallet(ExternalWalletResponse response) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('External Wallet: ${response.walletName}')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -97,7 +142,7 @@ class _OrdersCartScreenState extends State<OrdersCartScreen> {
                                         const SizedBox(width: 10),
                                         Expanded(
                                           child: Text(
-                                            'Order #${order.id.substring(0, 5).toUpperCase()}',
+                                            'Order #${order.id.length > 5 ? order.id.substring(0, 5).toUpperCase() : order.id}',
                                             style: const TextStyle(fontWeight: FontWeight.bold),
                                           ),
                                         ),
@@ -240,13 +285,25 @@ class _OrdersCartScreenState extends State<OrdersCartScreen> {
                                 ],
                               ),
                               ElevatedButton(
-                                onPressed: () async {
-                                  await _orderService.placeOrder(cartItems, total);
-                                  await _cartService.clearCart();
-                                  if (mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Order placed successfully!')),
-                                    );
+                                onPressed: () {
+                                  _currentCartItems = cartItems;
+                                  _currentTotal = total;
+                                  
+                                  var options = {
+                                    'key': 'rzp_test_SeeglKzlUwB5rp',
+                                    'amount': (total * 100).toInt(),
+                                    'name': 'Bazario',
+                                    'description': 'Purchase Items',
+                                    'prefill': {
+                                      'contact': '9876543210',
+                                      'email': 'test@razorpay.com'
+                                    }
+                                  };
+
+                                  try {
+                                    _razorpay.open(options);
+                                  } catch (e) {
+                                    debugPrint('Error: $e');
                                   }
                                 },
                                 style: ElevatedButton.styleFrom(

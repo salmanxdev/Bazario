@@ -1,14 +1,61 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../../features/auth/presentation/providers/auth_provider.dart';
+import '../../../../core/services/order_service.dart';
+import '../../../../core/services/wishlist_service.dart';
+import '../../../../core/services/chat_service.dart';
 
-class ProfileScreen extends ConsumerWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+  final OrderService _orderService = OrderService();
+  final WishlistService _wishlistService = WishlistService();
+  final ChatService _chatService = ChatService();
+  bool _isUploading = false;
+
+  Future<void> _pickAndUploadImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _isUploading = true;
+      });
+      try {
+        final file = File(pickedFile.path);
+        final ref = FirebaseStorage.instance
+            .ref()
+            .child('user_profiles')
+            .child('${FirebaseAuth.instance.currentUser!.uid}.jpg');
+        await ref.putFile(file);
+        final url = await ref.getDownloadURL();
+        await ref.read(currentUserProvider.notifier).updateProfileImage(url);
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to upload image: $e')));
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isUploading = false;
+          });
+        }
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final userState = ref.watch(currentUserProvider);
     final user = userState.value;
     
@@ -35,9 +82,34 @@ class ProfileScreen extends ConsumerWidget {
               // User Header
               Row(
                 children: [
-                  const CircleAvatar(
-                    radius: 35,
-                    backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=11'),
+                  GestureDetector(
+                    onTap: _pickAndUploadImage,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        CircleAvatar(
+                          radius: 35,
+                          backgroundColor: Colors.grey.shade300,
+                          backgroundImage: user?.profileImageUrl != null
+                              ? NetworkImage(user!.profileImageUrl!)
+                              : const NetworkImage('https://i.pravatar.cc/150?img=11'),
+                        ),
+                        if (_isUploading)
+                          const CircularProgressIndicator(color: Colors.white),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: Color(0xff6C63FF),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.camera_alt, color: Colors.white, size: 12),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(width: 15),
                   Expanded(
@@ -45,11 +117,13 @@ class ProfileScreen extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '${user?.firstName ?? 'Rohan'} ${user?.lastName ?? 'Verma'}',
+                          '${user?.firstName ?? ''} ${user?.lastName ?? ''}'.trim().isEmpty 
+                              ? 'Loading...' 
+                              : '${user?.firstName} ${user?.lastName}',
                           style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xff2A2A3A)),
                         ),
                         Text(
-                          user?.email ?? 'rohan.verma@email.com',
+                          user?.email ?? '',
                           style: const TextStyle(color: Colors.grey, fontSize: 13),
                         ),
                         const SizedBox(height: 5),
@@ -90,13 +164,31 @@ class ProfileScreen extends ConsumerWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _buildStatItem(Icons.shopping_bag_outlined, const Color(0xff8772FE), '12', 'Orders'),
+                    StreamBuilder(
+                      stream: _orderService.getOrders(),
+                      builder: (context, snapshot) {
+                        final count = snapshot.hasData ? snapshot.data!.length : 0;
+                        return _buildStatItem(Icons.shopping_bag_outlined, const Color(0xff8772FE), '$count', 'Orders');
+                      }
+                    ),
                     _buildDivider(),
-                    _buildStatItem(CupertinoIcons.heart, const Color(0xffFF7096), '8', 'Wishlist'),
+                    StreamBuilder(
+                      stream: _wishlistService.getWishlistItems(),
+                      builder: (context, snapshot) {
+                        final count = snapshot.hasData ? snapshot.data!.docs.length : 0;
+                        return _buildStatItem(CupertinoIcons.heart, const Color(0xffFF7096), '$count', 'Wishlist');
+                      }
+                    ),
                     _buildDivider(),
-                    _buildStatItem(CupertinoIcons.tag, const Color(0xffFFB703), '5', 'Coupons'),
+                    StreamBuilder(
+                      stream: _chatService.getChatRooms(),
+                      builder: (context, snapshot) {
+                        final count = snapshot.hasData ? snapshot.data!.docs.length : 0;
+                        return _buildStatItem(CupertinoIcons.chat_bubble_2, const Color(0xffFFB703), '$count', 'Messages');
+                      }
+                    ),
                     _buildDivider(),
-                    _buildStatItem(Icons.account_balance_wallet_outlined, const Color(0xff2DDA93), '₹1,250', 'Wallet Balance'),
+                    _buildStatItem(Icons.account_balance_wallet_outlined, const Color(0xff2DDA93), '₹${user?.walletBalance ?? 0}', 'Wallet Balance'),
                   ],
                 ),
               ),

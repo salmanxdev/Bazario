@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
-import '../../../shared/models/product_model.dart';
+import 'package:bazario/shared/models/product_model.dart';
 
 class ProductPopupCard extends StatelessWidget {
   final Product product;

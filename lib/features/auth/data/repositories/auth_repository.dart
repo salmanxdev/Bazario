@@ -56,4 +56,13 @@ class AuthRepository {
   Future<void> logout() async {
     await _auth.signOut();
   }
+
+  Future<void> updateProfileImage(String imageUrl) async {
+    final user = _auth.currentUser;
+    if (user != null) {
+      await _firestore.collection('users').doc(user.uid).update({
+        'profileImageUrl': imageUrl,
+      });
+    }
+  }
 }

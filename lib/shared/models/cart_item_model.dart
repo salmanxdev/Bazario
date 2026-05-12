@@ -18,14 +18,19 @@ class CartItem {
   });
 
   factory CartItem.fromFirestore(DocumentSnapshot doc) {
-    Map data = doc.data() as Map<String, dynamic>;
+    final data = doc.data();
+    final map = data != null ? Map<String, dynamic>.from(data as Map) : <String, dynamic>{};
+    return CartItem.fromMap(map, id: doc.id);
+  }
+
+  factory CartItem.fromMap(Map<String, dynamic> data, {String id = ''}) {
     return CartItem(
-      id: doc.id,
-      productId: data['productId'] ?? '',
-      productName: data['productName'] ?? '',
+      id: id,
+      productId: data['productId'] as String? ?? '',
+      productName: data['productName'] as String? ?? '',
       price: (data['price'] ?? 0).toDouble(),
-      mediaUrl: data['mediaUrl'] ?? '',
-      quantity: data['quantity'] ?? 1,
+      mediaUrl: data['mediaUrl'] as String? ?? '',
+      quantity: (data['quantity'] as num? ?? 1).toInt(),
     );
   }
 

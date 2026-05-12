@@ -47,34 +47,9 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> with SingleTi
                 Center(
                   child: Column(
                     children: [
-                      Container(
-                        height: 60,
-                        width: 60,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF6C63FF),
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF6C63FF).withOpacity(0.3),
-                              blurRadius: 15,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.shopping_bag_rounded,
-                          color: Colors.white,
-                          size: 32,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Bazario',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: Colors.black87,
-                          letterSpacing: -0.5,
-                        ),
+                      Image.asset(
+                        'assets/images/logo.png',
+                        height: 64,
                       ),
                     ],
                   ),
@@ -83,7 +58,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> with SingleTi
 
                 // Headings
                 Text(
-                  'Join Bazario',
+                  'Welcome',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: Colors.black,

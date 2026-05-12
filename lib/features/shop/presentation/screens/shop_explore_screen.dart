@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../../core/services/shop_service.dart';
 
 class ShopExploreScreen extends StatelessWidget {
   const ShopExploreScreen({super.key});
@@ -31,46 +33,42 @@ class ShopExploreScreen extends StatelessWidget {
 
             // Store List
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                children: [
-                  _buildStoreCard(
-                    context,
-                    name: 'Style Street',
-                    distance: '850 m away',
-                    address: 'Brigade Road, Bengaluru',
-                    description: 'Trendy fashion for every occasion. Discover your style with us.',
-                    tags: ['Men', 'Women', 'Bags & Accessories', '+2 more'],
-                    rating: '4.7',
-                    reviews: '215 reviews',
-                    imageUrl: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=400&q=80',
-                  ),
-                  const SizedBox(height: 20),
-                  _buildStoreCard(
-                    context,
-                    name: 'Toy Town',
-                    distance: '950 m away',
-                    address: '1st Main Road, Indiranagar, Bengaluru',
-                    description: 'Fun, safe & educational toys for kids of all ages. Play more, learn more!',
-                    tags: ['Soft Toys', 'Educational Toys', 'Action Figures', '+4 more'],
-                    rating: '4.8',
-                    reviews: '362 reviews',
-                    imageUrl: 'https://images.unsplash.com/photo-1558066551-7688219de8c9?auto=format&fit=crop&w=400&q=80',
-                  ),
-                  const SizedBox(height: 20),
-                  _buildStoreCard(
-                    context,
-                    name: 'Casa Living',
-                    distance: '1.2 km away',
-                    address: 'MG Road, Bengaluru',
-                    description: 'Stylish home decor for every corner of your home.',
-                    tags: ['Wall Decor', 'Vases & Planters', 'Cushions', '+3 more'],
-                    rating: '4.6',
-                    reviews: '128 reviews',
-                    imageUrl: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=400&q=80',
-                  ),
-                  const SizedBox(height: 20),
-                ],
+              child: StreamBuilder<QuerySnapshot>(
+                stream: ShopService().getShops(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return const Center(child: Text('No shops available.'));
+                  }
+
+                  final docs = snapshot.data!.docs;
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    itemCount: docs.length,
+                    itemBuilder: (context, index) {
+                      final data = docs[index].data() as Map<String, dynamic>;
+                      final tagsList = (data['tags'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
+
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 20),
+                        child: _buildStoreCard(
+                          context,
+                          name: data['name'] ?? 'Shop',
+                          distance: 'Online',
+                          address: data['address'] ?? '',
+                          description: data['description'] ?? '',
+                          tags: tagsList.take(3).toList(),
+                          rating: data['rating'] ?? '5.0',
+                          reviews: data['reviews'] ?? '0 reviews',
+                          imageUrl: data['imageUrl'] ?? 'https://via.placeholder.com/400',
+                        ),
+                      );
+                    },
+                  );
+                },
               ),
             ),
           ],
